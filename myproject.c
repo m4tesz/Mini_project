@@ -6,12 +6,7 @@
 
 typedef char* string;
 
-void help();
-void c_template(FILE *f);
-void bash_template(FILE *f);
-void java_template(FILE *f);
-
-int file_exists(const char *filename)
+int file_exists(const char *filename)   //ezaltal nem irodik felul a fajl, ha mar letezik
 {
     FILE *f = fopen(filename, "r");
 
@@ -27,14 +22,10 @@ int file_exists(const char *filename)
 void c_template(FILE *f)
 {
     fprintf(f, "#include <stdio.h>\n\n");
-    fprintf(f, "void greet()\n");
-    fprintf(f, "{\n");
-    fprintf(f, "    printf(\"Welcome to the C template!\\n\");\n");
-    fprintf(f, "}\n\n");
 
     fprintf(f, "int main()\n");
     fprintf(f, "{\n");
-    fprintf(f, "    greet();\n");
+    fprintf(f, "    printf(\"[C] Hello World\\n\");\n");
     fprintf(f, "    return 0;\n");
     fprintf(f, "}\n");
 }
@@ -42,40 +33,34 @@ void c_template(FILE *f)
 void bash_template(FILE *f)
 {
     fprintf(f, "#!/bin/bash\n\n");
-    fprintf(f, "echo 'System information script'\n");
-    fprintf(f, "echo 'Current user:' $USER\n");
-    fprintf(f, "echo 'Current directory:' $(pwd)\n");
+    fprintf(f, "echo \"[BASH] Hello World\"\n");
 }
 
 void java_template(FILE *f)
 {
-    fprintf(f, "public class Program {\n");
-    fprintf(f, "\n");
-    fprintf(f, "    public static void printMessage() {\n");
-    fprintf(f, "        System.out.println(\"Java template started!\");\n");
-    fprintf(f, "    }\n\n");
-
+    fprintf(f, "public class Program {\n\n");
     fprintf(f, "    public static void main(String[] args) {\n");
-    fprintf(f, "        printMessage();\n");
+    fprintf(f, "        System.out.println(\"[JAVA] Hello World\");\n");
     fprintf(f, "    }\n");
     fprintf(f, "}\n");
 }
 
 void help()
 {
-    printf("maker %s\n\n", VERSION);
+    printf("myproject %s\n\n", VERSION);
 
-    printf("Usage:\n");
-    printf("maker <template> [--stdout]\n\n");
+    printf("Options:\n\n");
+
+    printf("myproject <template> [--stdout]\n\n");
 
     printf("Templates:\n");
     printf("c       -> C source [program.c]\n");
-    printf("java    -> Java source [Program.java]\n");
-    printf("sh      -> Bash script [program.sh]\n\n");
+    printf("java    -> Java source [program.java]\n");
+    printf("sh      -> Bash source [program.sh]\n\n");
 
     printf("Options:\n");
     printf("-h --help       Show help\n");
-    printf("-v              Version info\n");
+    printf("-v              Show version\n");
 }
 
 int main(int argc, string argv[])
@@ -90,4 +75,64 @@ int main(int argc, string argv[])
     {
         help();
         return 0;
+    }
+
+    if (strcmp(argv[1], "-v") == 0)
+    {
+        printf("myproject %s\n", VERSION);
+        return 0;
+    }
+
+    string language = argv[1];
+    FILE *output = NULL;
+    int is_stdout = (argc > 2 && strcmp(argv[2], "--stdout") == 0);
+    char *filename = NULL;
+
+    if (strcmp(language, "c") == 0)
+        filename = "program.c";
+    else if (strcmp(language, "java") == 0)
+        filename = "Program.java";
+    else if (strcmp(language, "sh") == 0)
+        filename = "program.sh";
+    else
+    {
+        printf("Unknown template: %s\n", language);
+        return 1;
+    }
+
+    if (is_stdout)
+    {
+        output = stdout;
+    }
+    else
+    {
+        if (file_exists(filename))
+        {
+            printf("File already exists: %s\n", filename);
+            return 1;
+        }
+
+        output = fopen(filename, "w");
+
+        if (!output)
+        {
+            printf("Error opening file!\n");
+            return 1;
+        }
+    }
+
+    if(strcmp(language, "c") == 0)
+        c_template(output);
+    else if (strcmp(language, "java") == 0)
+        java_template(output);
+    else if (strcmp(language, "sh") == 0)
+        bash_template(output);
+
+    if (!is_stdout)
+    {
+        fclose(output);
+        printf("Created: %s\n", filename);
+    }
+
+    return 0;
 }
